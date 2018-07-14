@@ -1,0 +1,3 @@
+rocketstation_Data/StreamingAssets/version.ini
+rocketstation_Data/StreamingAssets/Language/.*\.xml$
+rocketstation_Data/StreamingAssets/Data/.*\.xml$
