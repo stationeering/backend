@@ -6,7 +6,7 @@ var LINEBREAK_REGEX = /[\r]?\n/;
 var PREPENDED_NOISE_REGEX = /\s?[-]?\s?/;
 var REMOVE_HTML_LIKE_REGEX = /<.*>(.*)<.*>/g;
 var NOTE_HEADER_REGEX = /(.*Version \d+.\d+.\d+.\d+.*)/;
-var VERSION_EXTRACT_REGEX = /(Version|Update) (\d+.\d+.\d+.\d+)/
+var VERSION_EXTRACT_REGEX = /(Version|Update) (\d+.\d+.\d+.\d+)/;
 
 const S3 = new AWS.S3();
 const DynamoDB = new AWS.DynamoDB();
@@ -18,7 +18,7 @@ function log(message) {
 function parseFile(contents) {
     log("Parsing version file...");
     var [header, versions] = contents.split("UPDATENOTES=", 2);
-    return { current: parseHeader(header), history: parseVersions(versions) }
+    return { current: parseHeader(header), history: parseVersions(versions) };
 }
 
 function parseHeader(header) {
@@ -31,7 +31,7 @@ function parseHeader(header) {
         return map;
     }, {});
 
-    return { version: parseHeaderVersion(parsed["UPDATEVERSION"]), date: parseHeaderDate(parsed["UPDATEDATE"]) }
+    return { version: parseHeaderVersion(parsed["UPDATEVERSION"]), date: parseHeaderDate(parsed["UPDATEDATE"]) };
 }
 
 function parseHeaderVersion(version) {
@@ -90,6 +90,10 @@ function extractVersion(versionRaw) {
 }
 
 exports.handler = async function (event, context, callback) {
+    if (event.Records[0].EventSource === "aws:sns") {
+        event = JSON.parse(event.Records[0].Sns.Message);
+    }
+
     var bucket = event.Records[0].s3.bucket.name;
     var key = event.Records[0].s3.object.key;
     var versionId = event.Records[0].s3.object.versionId;
@@ -174,6 +178,7 @@ async function updateBranchState(branch, version) {
         ExpressionAttributeNames: {
             "#G": "game",
             "#V": "version",
+            "#VT": "version_text",
             "#B": branchDateField
         },
         ExpressionAttributeValues: {
@@ -181,14 +186,16 @@ async function updateBranchState(branch, version) {
                 S: "stationeers"
             },
             ":version": {
-                S: version
+                N: versionAsNumber(version)
             }
         },
-        ProjectionExpression: "#V",
+        ProjectionExpression: "#VT",
         KeyConditionExpression: "#G = :game AND #V <= :version",
         FilterExpression: "attribute_not_exists(#B)",
         TableName: "Versions"
-    }
+    };
+
+    var dynamoResponse;
 
     try {
         log("Finding unannotated versions via query....");
@@ -198,12 +205,14 @@ async function updateBranchState(branch, version) {
         return false;
     }
 
-    var versionsToUpdate = dynamoResponse.Items.map((res) => res.version.S)
-    var date = Date.now().toString();;
+    var versionsToUpdate = dynamoResponse.Items.map((res) => res.version_text.S)
+    var date = Date.now().toString();
 
     for (let version of versionsToUpdate) {
         await updateBranchStateOnVersion(version, branch, date);
     }
+
+    log("Finished version annotation.");
 }
 
 async function updateBranchStateOnVersion(version, branch, date) {
@@ -217,7 +226,7 @@ async function updateBranchStateOnVersion(version, branch, date) {
                 S: "stationeers"
             },
             "version": {
-                S: version
+                N: versionAsNumber(version)
             }
         },
         ExpressionAttributeNames: {
@@ -241,7 +250,7 @@ async function updateBranchStateOnVersion(version, branch, date) {
         log("DynamoDB Failed! " + err);
         return false;
     }
-};
+}
 
 async function ingestVersion(versionData) {
     log("Ingest: " + versionData.version);
@@ -251,7 +260,7 @@ async function ingestVersion(versionData) {
             S: "stationeers"
         },
         "version": {
-            S: versionData.version
+            N: versionAsNumber(versionData.version)
         },
     };
 
@@ -263,12 +272,14 @@ async function ingestVersion(versionData) {
             Key: key,
             ExpressionAttributeNames: {
                 "#L": "updated_date",
-                "#V": "version"
+                "#V": "version",
+                "#VT": "version_text"
             },
             ExpressionAttributeValues: {
-                ":l": { N: date }
+                ":l": { N: date },
+                ":vt": { S: versionData.version }
             },
-            UpdateExpression: "SET #L = :l",
+            UpdateExpression: "SET #L = :l, #VT = :vt",
             ConditionExpression: "attribute_not_exists(#V)",
             ReturnValues: "NONE",
             TableName: "Versions"
@@ -282,13 +293,15 @@ async function ingestVersion(versionData) {
             Key: key,
             ExpressionAttributeNames: {
                 "#N": "notes",
-                "#L": "updated_date"
+                "#L": "updated_date",
+                "#VT": "version_text"
             },
             ExpressionAttributeValues: {
                 ":n": { L: notes },
-                ":l": { N: date }
+                ":l": { N: date },
+                ":vt": { S: versionData.version }
             },
-            UpdateExpression: "SET #N = :n, #L = :l",
+            UpdateExpression: "SET #N = :n, #L = :l, #VT = :vt",
             ConditionExpression: "attribute_not_exists(#N)",
             ReturnValues: "NONE",
             TableName: "Versions",
@@ -298,7 +311,7 @@ async function ingestVersion(versionData) {
     if (versionData.built) {
         params.ExpressionAttributeNames["#B"] = "built_date";
         params.ExpressionAttributeValues[":b"] = { N: versionData.built.toString() };
-        params.UpdateExpression = UpdateExpression + ", #B = :b";
+        params.UpdateExpression = params.UpdateExpression + ", #B = :b";
     }
 
     var dynamoResponse;
@@ -312,4 +325,8 @@ async function ingestVersion(versionData) {
     }
 
     return true;
-};
+}
+
+function versionAsNumber(version) {
+    return Number.parseInt(version.split(".").map((part) => part.padStart(5, "0")).join("")).toString();
+}
