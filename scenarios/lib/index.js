@@ -41,7 +41,7 @@ function extractWorld(worldSettingsData) {
         game_mode: worldSettingsData.GameMode[0],        
         planet: {
             gravity:  Number.parseFloat(worldSettingsData.Gravity[0]),
-            dayLength: extractDayLength(worldSettingsData)
+            day_length: extractDayLength(worldSettingsData)
         },
         atmosphere: {
             temperature: extractTemperature(worldSettingsData.Kelvin[0]),
