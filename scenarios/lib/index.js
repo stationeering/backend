@@ -23,8 +23,27 @@ exports.handler = async function (event, context, callback) {
 
 async function processBody(key, body) {
     var branch = key.split("/", 1)[0];
-    
-    xml2js(body, function (err, result) {
-        log(JSON.stringify(result));
+    var data = await parseXMLToJson(body);
+
+    var rawWorlds = data.GameData.WorldSettings[0].WorldSettingData;
+    var cleanedWorlds = worlds.map((world) => extractWorld(world));
+}
+
+function extractWorld(worldSettingsData) {
+    return {
+        name: worldSettingsData.Name[0]
+    }
+}
+
+function parseXMLToJson(body) {
+    return new Promise(function (resolve, reject) {
+        xml2js(body, function (err, result) {
+            if (err) {
+                reject(err);
+            }
+            else {
+                resolve(result);
+            }
+        });
     });
 }
