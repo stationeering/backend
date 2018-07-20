@@ -24,7 +24,7 @@ STEAM_PASSWORD=`echo $value | sed -e 's/^"//' -e 's/"$//'`
 log "Loaded credentials for steam user '$STEAM_USERNAME'."
 
 log "Find steam depot info for Stationeers..."
-/opt/steamcmd/steamcmd.sh "+login anonymous" "+app_info_print 544550" "+quit" | head -n -1 > /tmp/stationeers.vdf
+/opt/steamcmd/steamcmd.sh "+login anonymous" "+app_info_print 544550" "+quit" > /tmp/stationeers.vdf
 
 do_branch() {
   branch=$1
