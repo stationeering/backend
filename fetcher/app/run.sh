@@ -33,15 +33,15 @@ do_branch() {
   abort $? "Failed to get /steam/depot/$branch"
   LAST_DEPOT_ID=`echo $value | sed -e 's/^"//' -e 's/"$//'`
 
-  CURRENT_DEPOT_ID=`node /opt/fetcher/process.js /tmp/stationeers.vdf $branch buildid`
-  abort $? "Failed to read VDF data from Steam."
+  CURRENT_DEPOT_ID=`nodejs /opt/fetcher/process.js /tmp/stationeers.vdf $branch buildid`
+  abort $? "Failed to read VDF data from Steam"
 
   if [ $CURRENT_DEPOT_ID -le $LAST_DEPOT_ID ]; then
     log "No update for $branch, last depot id $LAST_DEPOT_ID and current depot id $CURRENT_DEPOT_ID."
     return
   fi
 
-  CURRENT_DEPOT_LAST_UPDATED=`node /opt/fetcher/process.js /tmp/stationeers.vdf $branch timeupdated`
+  CURRENT_DEPOT_LAST_UPDATED=`nodejs /opt/fetcher/process.js /tmp/stationeers.vdf $branch timeupdated`
   download_dir=/tmp/download/$branch
 
   log "Making download directory..."
