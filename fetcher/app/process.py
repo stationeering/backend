@@ -8,11 +8,15 @@ field = sys.argv[3]
 with open(fileName, 'r') as f:
         rawFile = f.read()
         d = "\"544550\""
+        removedTrashBeginning = [d+e for e in rawFile.split(d, 1) if e]
+        
+        revTrash = removedTrashBeginning[1][::-1]
 
-        cleanedFile = [d+e for e in rawFile.split(d, 1) if e]
+        d = "}"
+        removedTrashEnd = [d+e for e in revTrash.split(d, 1) if e]
 
-        print(cleanedFile[1])
+        cleanedFile = removedTrashEnd[1][::-1]
 
-        data = vdf.loads(cleanedFile[1])
+        data = vdf.loads(cleanedFile)
 
         print(data["544550"]["depots"]["branches"][branch][field])
