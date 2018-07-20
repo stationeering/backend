@@ -1,20 +1,31 @@
-# Start from alpine.
-FROM alpine:latest
+# Start from ubuntu.
+FROM ubuntu:16.04
 
-# Install Mono
-RUN apk add --no-cache mono --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing && \
-    apk add --no-cache --virtual=.build-dependencies ca-certificates && \
-    cert-sync /etc/ssl/certs/ca-certificates.crt && \
-    apk del .build-dependencies
+# Install Mono.
+RUN apt-get update && \
+    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
+    apt-get install -y apt-transport-https && \
+    echo "deb https://download.mono-project.com/repo/ubuntu stable-xenial main" | tee /etc/apt/sources.list.d/mono-official-stable.list && \
+    apt update && \
+    apt-get install -y mono-runtime
 
 # Install awscli.
-RUN apk add --no-cache aws-cli --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing
+RUN apt-get install -y awscli
 
 # Download and install Depot Downloader.
-RUN apk add --no-cache curl unzip \
+RUN apt-get install -y curl unzip \
   && curl -L https://github.com/SteamRE/DepotDownloader/releases/download/DepotDownloader_2.2.2/depotdownloader-2.2.2.zip -o /tmp/DepotDownloader.zip \
   && mkdir -p /opt/depotdownloader \
   && unzip /tmp/DepotDownloader.zip -d /opt/depotdownloader
+
+# Download and install SteamCMD.
+RUN apt-get install -y lib32gcc1 \
+    && mkdir -p /opt/steamcmd \
+    && curl -sqL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar zxvf - -C /opt/steamcmd \
+    && /opt/steamcmd/steamcmd.sh "+login anonymous" +quit
+
+# Install node.
+RUN apt-get install -y nodejs
 
 # Copy application.
 COPY app /opt/fetcher
