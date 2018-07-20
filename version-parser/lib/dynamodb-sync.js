@@ -27,15 +27,11 @@ exports.importHistory = async function importHistory(branch, versionHistory, lat
 async function ingestVersion(branch, versionData, latestDate) {
     log("Ingest: " + versionData.version + " onto " + branch);
 
-    if (branch === "public" && await updatePublicDate(versionData, latestDate)) {
-        return true;
+    if (branch === "public") {
+        await updatePublicDate(versionData, latestDate);
     }
 
-    if (await insertVersionIfDoesntExist(branch, versionData, latestDate)) {
-        return true;
-    }
-
-    return await updateVersionNotesIfNotPresent(branch, versionData, latestDate);
+    return (await insertVersionIfDoesntExist(branch, versionData, latestDate) && await updateVersionNotesIfNotPresent(branch, versionData, latestDate));
 }
 
 async function updatePublicDate(versionData, latestDate) {
@@ -49,13 +45,13 @@ async function updatePublicDate(versionData, latestDate) {
         ExpressionAttributeNames: {
             "#V": "version",
             "#P": "public_date",
-            "#L": "last_updated"
+            "#L": "updated_date"
         },
         ExpressionAttributeValues: {
             ":p": { N: latestDate },
             ":l": { N: Date.now().toString() }
         },
-        UpdateExpression: "LET #P = :p, #L = :l"
+        UpdateExpression: "SET #P = :p, #L = :l"
     }
 
     var dynamoResponse;
@@ -93,10 +89,10 @@ async function insertVersionIfDoesntExist(branch, versionData, latestDate) {
         log("Completed insert.");
     } catch (err) {
         log("DynamoDB Failed! " + err);
-        return false;
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 async function updateVersionNotesIfNotPresent(branch, versionData) {
@@ -104,7 +100,7 @@ async function updateVersionNotesIfNotPresent(branch, versionData) {
 
     if (!versionData.notes) {
         log(versionData.version + " does not have notes block to update.")
-        return true;
+        return false;
     }
 
     var params = {
@@ -135,10 +131,10 @@ async function updateVersionNotesIfNotPresent(branch, versionData) {
         log("Completed insert.");
     } catch (err) {
         log("DynamoDB Failed! " + err);
-        return false;
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 function convertVersionDataToParams(params, branch, versionData, latestDate) {
@@ -188,7 +184,6 @@ function convertVersionDataToParams(params, branch, versionData, latestDate) {
     updateExpressions.push("#updated_date = :updated_date");
 
     var expression = "SET " + updateExpressions.join(", ");    
-    console.log("**** " + expression);
     return { ...params, ExpressionAttributeNames: names, ExpressionAttributeValues: values, UpdateExpression: expression };
 }
 

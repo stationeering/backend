@@ -37,6 +37,8 @@ exports.publishRecent = async function publishRecentVersions() {
 
     var betaItems = dynamoResponse.Items;
 
+    var publicCount = Math.max(5, (15 - betaItems.length));
+
     log("Retrieving public version history...");
 
     var params = {
@@ -52,7 +54,7 @@ exports.publishRecent = async function publishRecentVersions() {
         KeyConditionExpression: "#G = :game",
         FilterExpression: "attribute_exists(#P)",
         ScanIndexForward: false,
-        Limit: betaItems.length + 5,
+        Limit: publicCount,
         TableName: "Versions"
     };
 

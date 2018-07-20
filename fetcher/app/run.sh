@@ -24,11 +24,12 @@ STEAM_PASSWORD=`echo $value | sed -e 's/^"//' -e 's/"$//'`
 log "Loaded credentials for steam user '$STEAM_USERNAME'."
 
 log "Find steam depot info for Stationeers..."
-/opt/steamcmd/steamcmd.sh "+login anonymous" "+app_info_print 544550" "+quit" > /tmp/stationeers.vdf
+/opt/steamcmd/steamcmd.sh "+login $STEAM_USERNAME $STEAM_PASSWORD" "+app_info_print 544550" "+quit" > /tmp/stationeers.vdf
 
 do_branch() {
   branch=$1
 
+  log "Fetching last depot processed."
   value=`aws ssm get-parameter --name "/steam/depot/$branch" --with-decryption --query Parameter.Value`
   abort $? "Failed to get /steam/depot/$branch"
   LAST_DEPOT_ID=`echo $value | sed -e 's/^"//' -e 's/"$//'`
