@@ -2,6 +2,10 @@ var AWS = require('aws-sdk');
 var S3 = new AWS.S3();
 var DynamoDB = new AWS.DynamoDB();
 
+function log(message) {
+    console.log("PublishRecent: " + message);
+}
+
 exports.publishRecent = async function publishRecentVersions() {
     log("Retrieving beta version history...");
 
@@ -65,6 +69,10 @@ exports.publishRecent = async function publishRecentVersions() {
 
     var outputItems = mergedItems.map((item) => {
         var output = { version: item.version_text.S };
+
+        if (item.hasOwnProperty("build_id")) {
+            output["build_id"] = item.build_id.N;
+        }
 
         if (item.hasOwnProperty("built_date")) {
             output["built_date"] = item.built_date.N;

@@ -27,8 +27,13 @@ async function processBody(key, body) {
     var branch = key.split("/", 1)[0];
     var versionData = VersionParser(body);
 
-    var importChanges = await importHistory(versionData.history);
-    var updateChanges = await updateBranchState(branch, versionData.current.version);
+    if (branch === "beta") {
+        versionData.history[versionData.current.version]["built"] = versionData.current.date;
+        versionData.history[versionData.current.version]["build_id"] = versionData.current.build_id;
+    }
+
+    var importChanges = await importHistory(branch, versionData.history, versionData.current.date.toString());
+    var updateChanges = await updateBranchState(branch, versionData.current.version, versionData.current.date.toString());
 
     log("Import Changes: " + importChanges + " Update Changes: " + updateChanges);
 

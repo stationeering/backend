@@ -5,7 +5,7 @@ function log(message) {
     console.log("DynamoDBSync: " + message);
 }
 
-exports.importHistory = async function importHistory(versionHistory) {
+exports.importHistory = async function importHistory(branch, versionHistory, latestDate) {
     log("Ingest version history...");
 
     var sortedHistory = Object.keys(versionHistory).sort().reverse();
@@ -13,7 +13,7 @@ exports.importHistory = async function importHistory(versionHistory) {
     var successCount = 0;
 
     for (let version of sortedHistory) {
-        if (!await ingestVersion(versionHistory[version])) {
+        if (await ingestVersion(branch, versionHistory[version], latestDate)) {
             log("Found that " + version + " was already present with notes. Abandoning.");
             break;
         } else {
@@ -24,73 +24,45 @@ exports.importHistory = async function importHistory(versionHistory) {
     return successCount > 0;
 }
 
-async function ingestVersion(versionData) {
-    log("Ingest: " + versionData.version);
+async function ingestVersion(branch, versionData, latestDate) {
+    log("Ingest: " + versionData.version + " onto " + branch);
 
-    var key = {
-        "game": {
-            S: "stationeers"
-        },
-        "version": {
-            N: versionAsNumber(versionData.version)
-        },
-    };
-
-    var date = Date.now().toString();
-    var params;
-
-    if (!versionData.notes) {
-        params = {
-            Key: key,
-            ExpressionAttributeNames: {
-                "#L": "updated_date",
-                "#V": "version",
-                "#VT": "version_text"
-            },
-            ExpressionAttributeValues: {
-                ":l": { N: date },
-                ":vt": { S: versionData.version }
-            },
-            UpdateExpression: "SET #L = :l, #VT = :vt",
-            ConditionExpression: "attribute_not_exists(#V)",
-            ReturnValues: "NONE",
-            TableName: "Versions"
-        };
-    } else {
-        var notes = versionData.notes.map((note) => {
-            return { S: note };
-        });
-
-        params = {
-            Key: key,
-            ExpressionAttributeNames: {
-                "#N": "notes",
-                "#L": "updated_date",
-                "#VT": "version_text"
-            },
-            ExpressionAttributeValues: {
-                ":n": { L: notes },
-                ":l": { N: date },
-                ":vt": { S: versionData.version }
-            },
-            UpdateExpression: "SET #N = :n, #L = :l, #VT = :vt",
-            ConditionExpression: "attribute_not_exists(#N)",
-            ReturnValues: "NONE",
-            TableName: "Versions",
-        };
+    if (branch === "public" && await updatePublicDate(versionData, latestDate)) {
+        return true;
     }
 
-    if (versionData.built) {
-        params.ExpressionAttributeNames["#B"] = "built_date";
-        params.ExpressionAttributeValues[":b"] = { N: versionData.built.toString() };
-        params.UpdateExpression = params.UpdateExpression + ", #B = :b";
+    if (await insertVersionIfDoesntExist(branch, versionData, latestDate)) {
+        return true;
+    }
+
+    return await updateVersionNotesIfNotPresent(branch, versionData, latestDate);
+}
+
+async function updatePublicDate(versionData, latestDate) {
+    log("Performing: " + versionData.version + ": Update public date.")
+
+    var params = {
+        Key: generateDynamoDBKey(versionData),
+        ReturnValues: "NONE",
+        TableName: "Versions",
+        ConditionExpression: "attribute_exists(#V)",
+        ExpressionAttributeNames: {
+            "#V": "version",
+            "#P": "public_date",
+            "#L": "last_updated"
+        },
+        ExpressionAttributeValues: {
+            ":p": { N: latestDate },
+            ":l": { N: Date.now().toString() }
+        },
+        UpdateExpression: "LET #P = :p, #L = :l"
     }
 
     var dynamoResponse;
 
     try {
         dynamoResponse = await DynamoDB.updateItem(params).promise();
-        log("Updated DynamoDB record.");
+        log("Completed insert.");
     } catch (err) {
         log("DynamoDB Failed! " + err);
         return false;
@@ -99,7 +71,139 @@ async function ingestVersion(versionData) {
     return true;
 }
 
-exports.updateBranchState = async function updateBranchState(branch, version) {
+async function insertVersionIfDoesntExist(branch, versionData, latestDate) {
+    log("Performing: " + versionData.version + ": Insert new version if it doesn't exist.")
+
+    var params = {
+        Key: generateDynamoDBKey(versionData),
+        ReturnValues: "NONE",
+        TableName: "Versions",
+        ConditionExpression: "attribute_not_exists(#V)",
+        ExpressionAttributeNames: {
+            "#V": "version",
+        }
+    }
+
+    params = convertVersionDataToParams(params, branch, versionData, latestDate);
+
+    var dynamoResponse;
+
+    try {
+        dynamoResponse = await DynamoDB.updateItem(params).promise();
+        log("Completed insert.");
+    } catch (err) {
+        log("DynamoDB Failed! " + err);
+        return false;
+    }
+
+    return true;
+}
+
+async function updateVersionNotesIfNotPresent(branch, versionData) {
+    log("Performing: " + versionData.version + ": Update version with notes if not present.")
+
+    if (!versionData.notes) {
+        log(versionData.version + " does not have notes block to update.")
+        return true;
+    }
+
+    var params = {
+        Key: generateDynamoDBKey(versionData),
+        ReturnValues: "NONE",
+        TableName: "Versions",
+        ConditionExpression: "attribute_exists(#V) AND attribute_not_exists(#N)",
+        ExpressionAttributeNames: {
+            "#V": "version",
+            "#N": "notes",
+            "#L": "last_updated"
+        },
+        ExpressionAttributeValues: {
+            ":n": {
+                L: versionData.notes.map((note) => {
+                    return { S: note };
+                })
+            },
+            ":l": { N: Date.now().toString() }
+        },
+        UpdateExpression: "SET #N = :n, #L = :l"
+    }
+
+    var dynamoResponse;
+
+    try {
+        dynamoResponse = await DynamoDB.updateItem(params).promise();
+        log("Completed insert.");
+    } catch (err) {
+        log("DynamoDB Failed! " + err);
+        return false;
+    }
+
+    return true;
+}
+
+function convertVersionDataToParams(params, branch, versionData, latestDate) {
+    var names = params.ExpressionAttributeNames;
+    var values = {};
+    var updateExpressions = [];
+
+    names["#version_text"] = "version_text";
+    values[":version_text"] = { S: versionData.version };
+    updateExpressions.push("#version_text = :version_text");
+
+    if (versionData.notes) {
+        names["#notes"] = "notes";
+        values[":notes"] = {
+            L: versionData.notes.map((note) => {
+                return { S: note };
+            })
+        };
+
+        updateExpressions.push("#notes = :notes");
+    }
+
+    if (versionData.build_id) {
+        names["#build_id"] = "build_id";
+        values[":build_id"] = { N: versionData.build_id };
+        updateExpressions.push("#build_id = :build_id");
+    }
+
+    if (versionData.built) {
+        names["#built_date"] = "built_date";
+        values[":built_date"] = { N: versionData.built.toString() };
+        updateExpressions.push("#built_date = :built_date");
+    }
+
+    names["#beta_date"] = "beta_date";
+    values[":beta_date"] = { N: latestDate };
+    updateExpressions.push("#beta_date = :beta_date");
+
+    if (branch === "public") {
+        names["#public_date"] = "public_date";
+        values[":public_date"] = { N: latestDate };
+        updateExpressions.push("#public_date = :public_date");
+    }
+
+    names["#updated_date"] = "updated_date";
+    values[":updated_date"] = { N: Date.now().toString() };
+    updateExpressions.push("#updated_date = :updated_date");
+
+    var expression = "SET " + updateExpressions.join(", ");    
+    console.log("**** " + expression);
+    return { ...params, ExpressionAttributeNames: names, ExpressionAttributeValues: values, UpdateExpression: expression };
+}
+
+function generateDynamoDBKey(versionData) {
+    return {
+        "game": {
+            S: "stationeers"
+        },
+        "version": {
+            N: versionAsNumber(versionData.version)
+        },
+    };
+}
+
+exports.updateBranchState = async function updateBranchState(branch, version, latestDate) {
     log("Modifying branch state...");
     log("Updating versions as old as or older than " + version + " to be current for " + branch + "...");
 
@@ -137,10 +241,9 @@ exports.updateBranchState = async function updateBranchState(branch, version) {
     }
 
     var versionsToUpdate = dynamoResponse.Items.map((res) => res.version_text.S)
-    var date = Date.now().toString();
 
     for (let version of versionsToUpdate) {
-        await updateBranchStateOnVersion(version, branch, date);
+        await updateBranchStateOnVersion(version, branch, latestDate);
     }
 
     log("Finished version annotation.");

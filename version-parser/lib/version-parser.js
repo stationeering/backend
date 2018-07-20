@@ -27,9 +27,6 @@ exports.VersionParser = function parseFile(contents) {
         history[currentVersion] = { version: currentVersion };
     }
 
-    // Add date to current build.
-    history[currentVersion]["built"] = current.date;
-
     log("Parse complete.");
 
     return { current, history };
@@ -45,7 +42,7 @@ function parseHeader(header) {
         return map;
     }, {});
 
-    return { version: parseHeaderVersion(parsed["UPDATEVERSION"]), date: parseHeaderDate(parsed["UPDATEDATE"]) };
+    return { version: parseHeaderVersion(parsed["UPDATEVERSION"]), date: parseHeaderDate(parsed["STEAM_TIMEUPDATED"]), build_id: parsed["STEAM_BUILDID"] };
 }
 
 function parseHeaderVersion(version) {
@@ -53,14 +50,7 @@ function parseHeaderVersion(version) {
 }
 
 function parseHeaderDate(date) {
-    var justDate = date.split(" ", 2)[1];
-    var [day, month, year] = justDate.split("/", 3);
-
-    var dayNumber = Number.parseInt(day, 10);
-    var monthNumber = Number.parseInt(month, 10) - 1;
-    var yearNumber = Number.parseInt(year, 10);
-
-    return new Date(Date.UTC(yearNumber, monthNumber, dayNumber, 0, 0, 0)).valueOf();
+    return Number.parseInt(date, 10) * 1000;
 }
 
 function parseVersions(raw) {
