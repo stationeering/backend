@@ -50,7 +50,8 @@ do_branch() {
   mkdir -p $download_dir
 
   log "Copying existing data into it..."
-  aws s3 sync s3://stationeering-gamedata/$branch $download_dir
+  cd $download_dir
+  aws s3 sync s3://stationeering-gamedata/$branch .
   
   log "Downloading $branch from steam..."
   mono /opt/depotdownloader/DepotDownloader.exe -app 544550 -beta $branch -username $STEAM_USERNAME -password $STEAM_PASSWORD -all-platforms -filelist /opt/fetcher/filelist.txt -dir $download_dir
