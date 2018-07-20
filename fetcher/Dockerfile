@@ -26,8 +26,8 @@ RUN apt-get install -y lib32gcc1 \
     && curl -sqL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar zxvf - -C /opt/steamcmd \
     && /opt/steamcmd/steamcmd.sh "+login anonymous" +quit
 
-# Install node.
-RUN apt-get install -y nodejs
+# Install VDF Library
+RUN pip install vdf
 
 # Copy application.
 COPY app /opt/fetcher

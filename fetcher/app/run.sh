@@ -24,7 +24,7 @@ STEAM_PASSWORD=`echo $value | sed -e 's/^"//' -e 's/"$//'`
 log "Loaded credentials for steam user '$STEAM_USERNAME'."
 
 log "Find steam depot info for Stationeers..."
-/opt/steamcmd/steamcmd.sh "+login anonymous" "+app_info_print 544550" "+quit" > /tmp/stationeers.vdf
+/opt/steamcmd/steamcmd.sh "+login anonymous" "+app_info_print 544550" "+quit" | head -n -1 > /tmp/stationeers.vdf
 
 do_branch() {
   branch=$1
@@ -33,7 +33,7 @@ do_branch() {
   abort $? "Failed to get /steam/depot/$branch"
   LAST_DEPOT_ID=`echo $value | sed -e 's/^"//' -e 's/"$//'`
 
-  CURRENT_DEPOT_ID=`nodejs /opt/fetcher/process.js /tmp/stationeers.vdf $branch buildid`
+  CURRENT_DEPOT_ID=`python3 /opt/fetcher/process.py /tmp/stationeers.vdf $branch buildid`
   abort $? "Failed to read VDF data from Steam"
 
   if [ $CURRENT_DEPOT_ID -le $LAST_DEPOT_ID ]; then
@@ -41,7 +41,7 @@ do_branch() {
     return
   fi
 
-  CURRENT_DEPOT_LAST_UPDATED=`nodejs /opt/fetcher/process.js /tmp/stationeers.vdf $branch timeupdated`
+  CURRENT_DEPOT_LAST_UPDATED=`python3 /opt/fetcher/process.py /tmp/stationeers.vdf $branch timeupdated`
   download_dir=/tmp/download/$branch
 
   log "Making download directory..."
