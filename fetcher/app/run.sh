@@ -70,7 +70,7 @@ do_branch() {
   aws s3 sync $download_dir s3://stationeering-gamedata/$branch/ --delete --metadata Branch=$branch,Version=$VERSION
   abort $? "Failed to public beta branch!"
 
-  aws ssm put-parameter --name "/steam/depot/$branch" --value $CURRENT_DEPOT_ID --type String
+  aws ssm put-parameter --name "/steam/depot/$branch" --value $CURRENT_DEPOT_ID --type String --overwrite
   abort $? "Failed to update build id in SSM!"
 }
 
