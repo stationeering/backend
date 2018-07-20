@@ -36,6 +36,8 @@ do_branch() {
   CURRENT_DEPOT_ID=`python3 /opt/fetcher/process.py /tmp/stationeers.vdf $branch buildid`
   abort $? "Failed to read VDF data from Steam"
 
+  echo "Branch $branch: Current Depot ID: $CURRENT_DEPOT_ID Last Seen Depot ID: $LAST_DEPOT_ID"
+
   if [ $CURRENT_DEPOT_ID -le $LAST_DEPOT_ID ]; then
     log "No update for $branch, last depot id $LAST_DEPOT_ID and current depot id $CURRENT_DEPOT_ID."
     return
