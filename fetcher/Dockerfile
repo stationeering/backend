@@ -10,7 +10,9 @@ RUN apt-get update && \
     apt-get install -y mono-runtime
 
 # Install awscli.
-RUN apt-get install -y awscli
+RUN apt-get install -y python3 python3-setuptools && \
+    easy_install3 pip && \
+    pip install awscli
 
 # Download and install Depot Downloader.
 RUN apt-get install -y curl unzip \
