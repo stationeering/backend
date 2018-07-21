@@ -91,7 +91,7 @@ async function pushToS3(branch, worldObject) {
     var S3 = new AWS.S3();
 
     log("Putting " + key + " to S3...");
-    await S3.putObject({ Bucket: "stationeering-data", Key: key, Body: jsonWorlds, CacheControl: "max-age=900,no-cache,no-store,must-revalidate" }).promise()
+    await S3.putObject({ Bucket: "stationeering-data", Key: key, Body: jsonWorlds, CacheControl: "max-age=900,no-cache,no-store,must-revalidate", ContentType: "application/json" }).promise();
     log("Completed");
 }
 

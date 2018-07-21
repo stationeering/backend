@@ -102,7 +102,7 @@ exports.publishRecent = async function publishRecentVersions() {
     var recentVersionsOutput = JSON.stringify(outputItems);
 
     try {
-        var s3Response = await S3.putObject({ Bucket: "stationeering-data", Key: "versions/recent.json", Body: recentVersionsOutput, CacheControl: "max-age=900,no-cache,no-store,must-revalidate" }).promise()
+        var s3Response = await S3.putObject({ Bucket: "stationeering-data", Key: "versions/recent.json", Body: recentVersionsOutput, CacheControl: "max-age=900,no-cache,no-store,must-revalidate", ContentType: "application/json" }).promise();
     } catch (err) {
         log("Failed to push new recent json. " + err);
     }

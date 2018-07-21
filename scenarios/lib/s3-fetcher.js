@@ -18,7 +18,7 @@ exports.S3Fetcher = async function (event, callback, process, selectCriteria = [
     var versionId = event.Records[0].s3.object.versionId;
     var operation = event.Records[0].eventName;
 
-    log("Notification for " + operation + " on " + bucket + "/" + key + "@" + versionId);
+    log("Notification for " + operation + " on " + bucket + "/" + key + "@" + (versionId ? versionId : "LATEST"));
 
     var selected = selectCriteria.every((selectFunc) => selectFunc(bucket, key, operation));
 
@@ -29,11 +29,20 @@ exports.S3Fetcher = async function (event, callback, process, selectCriteria = [
     }
 
     var s3Response;
-    
+
     log("Fetching body from S3...");
 
     try {
-        s3Response = await S3.getObject({ Bucket: bucket, Key: key, VersionId: versionId }).promise();
+        var request = {
+            Bucket: bucket,
+            Key: key
+        };
+
+        if (versionId) {
+            request["VersionId"] = versionId;
+        }
+
+        s3Response = await S3.getObject(request).promise();
     } catch (err) {
         callback("Failed to get object from S3 bucket.");
         return;
@@ -48,7 +57,7 @@ exports.S3Fetcher = async function (event, callback, process, selectCriteria = [
         await process(key, s3Response.Body.toString());
         log("Application completed work, finished.");
         callback(null, "Application complete work.");
-    } catch(err) {
+    } catch (err) {
         log("Application threw error, aborting.");
         callback(err);
     }
