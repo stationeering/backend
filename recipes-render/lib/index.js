@@ -41,6 +41,8 @@ function remapDynamoToSane(dynamoItem) {
         return acc;
     }, {})
 
+    var cost = calculateCost(ingredients);
+
     return { item, manufactory, ingredients };
 }
 
