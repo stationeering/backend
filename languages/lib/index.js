@@ -40,7 +40,7 @@ async function processBody(key, body) {
 
 async function publishToS3(branch, languageData) {
     var jsonLanguage = JSON.stringify(languageData);
-    var key = "languages/" + branch + "/" + languageData.code + ".json";
+    var key = "languages/" + languageData.code + "/" + branch + ".json";
     var S3 = new AWS.S3();
 
     log("Putting " + key + " to S3...");
