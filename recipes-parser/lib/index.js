@@ -176,13 +176,13 @@ async function removeRecipe(manufactory, item) {
     var params = {
         TableName: "Recipes",
         Key: {
-            "manufactory": manufactory,
-            "item": "item"
+            "manufactory": { S: manufactory },
+            "item": { S: item }
         }
     }
 
     try {
-        var dynamoResponse = await DynamoDB.delete(params).promise();
+        var dynamoResponse = await DynamoDB.deleteItem(params).promise();
         log("Deleted " + item + " from " + manufactory + ".");
     } catch (err) {
         log("DynamoDB Failed! " + err);
