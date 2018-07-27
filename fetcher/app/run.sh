@@ -55,7 +55,17 @@ do_branch() {
   
   log "Downloading $branch from steam..."
   mono /opt/depotdownloader/DepotDownloader.exe -app 544550 -beta $branch -username $STEAM_USERNAME -password $STEAM_PASSWORD -all-platforms -filelist /opt/fetcher/filelist.txt -dir $download_dir
+
+  log "Downloading manifest to allow removal of files..."
+  mono /opt/depotdownloader/DepotDownloader.exe -app 544550 -beta $branch -username $STEAM_USERNAME -password $STEAM_PASSWORD -all-platforms -filelist /opt/fetcher/filelist.txt -dir $download_dir -manifest-only
+  manifest_file=$download_dir/manifest_*.txt
+
   abort $? "Failed to download public branch!"
+
+  log "Remove files which are no longer present."
+  cd $download_dir
+  find . -type f -print | cut -sd / -f 2- | grep -Fxvf $manifest_file | xargs -d'\n' rm  
+  cd /
 
   log "Identifying versions..."
   VERSION=`cat $download_dir/rocketstation_Data/StreamingAssets/version.ini | grep UPDATEVERSION | awk -F\  '{ printf $2 }' | sed -r 's/\r//g'`

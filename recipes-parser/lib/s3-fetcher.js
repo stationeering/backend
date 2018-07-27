@@ -28,33 +28,39 @@ exports.S3Fetcher = async function (event, callback, process, selectCriteria = [
         return;
     }
 
-    var s3Response;
+    var body = undefined;
 
-    log("Fetching body from S3...");
+    if (operation.startsWith("ObjectCreated")) {
+        var s3Response;
 
-    try {
-        var request = {
-            Bucket: bucket,
-            Key: key
-        };
+        log("Fetching body from S3...");
 
-        if (versionId) {
-            request["VersionId"] = versionId;
+        try {
+            var request = {
+                Bucket: bucket,
+                Key: key
+            };
+
+            if (versionId) {
+                request["VersionId"] = versionId;
+            }
+
+            s3Response = await S3.getObject(request).promise();
+        } catch (err) {
+            callback("Failed to get object from S3 bucket.");
+            return;
         }
 
-        s3Response = await S3.getObject(request).promise();
-    } catch (err) {
-        callback("Failed to get object from S3 bucket.");
-        return;
+        body = s3Response.Body.toString();
+
+        log("Body fetched, " + body.length + " bytes.");
+    } else {
+        log("Body fetch skipped as this is a delete.");
     }
 
-    var body = s3Response.Body.toString();
-
-    log("Body fetched, " + body.length + " bytes.");
-
     try {
-        log("Passing body to application...");
-        await process(key, s3Response.Body.toString());
+        log("Passing data to application...");
+        await process(key, body, operation);
         log("Application completed work, finished.");
         callback(null, "Application complete work.");
     } catch (err) {

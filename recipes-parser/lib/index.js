@@ -14,7 +14,7 @@ function log(message) {
 exports.handler = async function (event, context, callback) {
     await S3Fetcher(event, callback, processBody, [
         function (bucket, key, operation) {
-            return operation.startsWith("ObjectCreated");
+            return operation.startsWith("ObjectCreated") || operation.startsWith("ObjectRemoved");
         },
         function (bucket, key, operation) {
             return key.endsWith(".xml");
@@ -25,14 +25,17 @@ exports.handler = async function (event, context, callback) {
     ]);
 }
 
-async function processBody(key, body) {
+async function processBody(key, body, operation) {
     var keyParts = key.split("/");
     var branch = keyParts[0];
     var file = keyParts[keyParts.length - 1];
 
-    var data = await parseXMLToJson(body);
+    var recipes = [];
 
-    var recipes = identifyRecipes(data);
+    if (operation.startsWith("ObjectCreated")) {    
+        var data = await parseXMLToJson(body);
+        recipes = identifyRecipes(data);
+    }
 
     await syncRecipes(branch, file, recipes);
     await notifyChanges(branch);
