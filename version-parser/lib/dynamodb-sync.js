@@ -61,7 +61,7 @@ async function updatePublicDate(versionData, latestDate) {
         dynamoResponse = await DynamoDB.updateItem(params).promise();
         log("Completed insert.");
 
-        publicSpecific(versionData.version, true);
+        await publicSpecific(versionData.version, true);
     } catch (err) {
         log("DynamoDB Failed! " + err);
         return false;
@@ -90,7 +90,7 @@ async function insertVersionIfDoesntExist(branch, versionData, latestDate) {
     try {
         dynamoResponse = await DynamoDB.updateItem(params).promise();
         log("Completed insert.");
-        publicSpecific(versionData.version, false);
+        await publicSpecific(versionData.version, false);
     } catch (err) {
         log("DynamoDB Failed! " + err);
         return true;
@@ -133,7 +133,7 @@ async function updateVersionNotesIfNotPresent(branch, versionData) {
     try {
         dynamoResponse = await DynamoDB.updateItem(params).promise();
         log("Completed insert.");
-        publicSpecific(versionData.version, true);
+        await publicSpecific(versionData.version, true);
     } catch (err) {
         log("DynamoDB Failed! " + err);
         return true;
@@ -244,7 +244,7 @@ exports.updateBranchState = async function updateBranchState(branch, version, la
 
     for (let version of versionsToUpdate) {
         await updateBranchStateOnVersion(version, branch, latestDate);
-        publicSpecific(version, true);
+        await publicSpecific(version, true);
     }
 
     log("Finished version annotation.");

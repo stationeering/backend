@@ -2,10 +2,13 @@ var AWS = require('aws-sdk');
 var S3 = new AWS.S3();
 var DynamoDB = new AWS.DynamoDB();
 var SNS = new AWS.SNS();
-var { versionAsNumber } = require('./dynamodb-sync');
 
 function log(message) {
     console.log("PublishRecent: " + message);
+}
+
+function versionAsNumber(version) {
+    return Number.parseInt(version.split(".").map((part) => part.padStart(5, "0")).join("")).toString();
 }
 
 exports.publicSpecific = async function publicSpecific(version, update) {
