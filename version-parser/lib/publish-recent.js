@@ -22,7 +22,8 @@ exports.publicSpecific = async function publicSpecific(version, update) {
             "version": {
                 N: versionAsNumber(version)
             }
-        }
+        },
+	TableName: "Versions"
     };
 
     var dynamodb;
