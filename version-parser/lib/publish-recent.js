@@ -38,7 +38,7 @@ exports.publicSpecific = async function publicSpecific(version, update) {
     var message = JSON.stringify({
         operation: (update ? "update" : "create"),
         type: "version",
-        version: dynamoDBToPlainObject(dynamodb.Items[0])
+        version: dynamoDBToPlainObject(dynamodb.Item)
     });
 
     var topic = process.env.ExternalNotificationTopicArn;
