@@ -1,17 +1,15 @@
 {
   "name": "version-parser",
   "version": "1.0.0",
-  "description": "Lambda to parse updates to version.ini.",
+  "description": "Version Parser",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "aws-sdk": "^2.274.1"
-  },
   "dependencies": {
-    "request": "^2.87.0"
+    "feed": "^2.0.1",
+    "htmlencode": "0.0.4"
   }
 }

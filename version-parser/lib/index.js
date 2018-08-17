@@ -2,6 +2,7 @@ var { S3Fetcher } = require('./s3-fetcher');
 var { VersionParser } = require('./version-parser');
 var { importHistory, updateBranchState } = require('./dynamodb-sync');
 var { publishRecent } = require('./publish-recent');
+var { publishAtom } = require('./publish-atom');
 
 var VALID_BRANCHES = ["public", "beta"];
 
@@ -40,5 +41,6 @@ async function processBody(key, body) {
     if (importChanges || updateChanges) {
         log("Change made, regenerating recent changes output file.");
         await publishRecent();
+        await publishAtom();
     }
 }
