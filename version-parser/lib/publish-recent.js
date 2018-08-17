@@ -99,7 +99,7 @@ exports.publishRecent = async function publishRecentVersions() {
         KeyConditionExpression: "#G = :game",
         FilterExpression: "attribute_exists(#P)",
         ScanIndexForward: false,
-        Limit: publicCount,
+        Limit: publicCount + betaItems.length,
         TableName: "Versions"
     };
 
@@ -111,7 +111,7 @@ exports.publishRecent = async function publishRecentVersions() {
         return false;
     }
 
-    var publicItems = dynamoResponse.Items;
+    var publicItems = dynamoResponse.Items.slice(0, publicCount);
     var mergedItems = betaItems.concat(publicItems);
 
     var outputItems = mergedItems.map((item) => {
