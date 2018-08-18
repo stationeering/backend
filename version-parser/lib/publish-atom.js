@@ -115,7 +115,7 @@ function convertToFeed(branch, versionData) {
     var versionContent;
     
     if (version.notes) {
-      versionContent = version.notes.map((note) => "<li>" + htmlencode.htmlEncode(note) + "</li>");
+      versionContent = version.notes.map((note) => "<li>" + htmlencode.htmlEncode(note) + "</li>").join('');
     } else {
       versionContent = "<li>No change log for this version.</li>"
     }
