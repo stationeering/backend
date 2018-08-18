@@ -1,3 +1,6 @@
+const AWS = require('aws-sdk');
+const lambda = new AWS.Lambda();
+
 var { S3Fetcher } = require('./s3-fetcher');
 var { VersionParser } = require('./version-parser');
 var { importHistory, updateBranchState } = require('./dynamodb-sync');
@@ -42,5 +45,16 @@ async function processBody(key, body) {
         log("Change made, regenerating recent changes output file.");
         await publishRecent();
         await publishAtom();
+
+        await invokeNextFunctions();
+    }
+}
+
+async function invokeNextFunctions() {
+    try {
+        log("Invoking Version Publish Pagination...")
+        await lambda.invoke({ FunctionName: "backend-version-publish-p-VersionPublishPaginatedL-JAW55VEV2MA5", InvocationType: "Event", Payload: {} }).promise();
+    } catch (err) {
+        log("Failed to invoke Lambda: " + err);
     }
 }
