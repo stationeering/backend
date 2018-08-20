@@ -52,7 +52,9 @@ async function publishPages() {
 }
 
 async function publishRecent(lastPage) {
-  var allUnpaginated = await fetchUnpaginatedVersions(false);
+  log("Finding unpaginated including beta...");
+  var allUnpaginated = await fetchUnpaginatedVersions(true);
+  log("Found " + allUnpaginated.length + " versions.");
   await publishVersions("head.json", lastPage, allUnpaginated);
 }
 
