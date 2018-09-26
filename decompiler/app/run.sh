@@ -27,15 +27,17 @@ mkdir -p /tmp/work/git
 
 log "Downloading Assembly-CSharp.dll and version.ini..."
 aws s3 cp s3://stationeering-gamedata/beta/rocketstation_Data/Managed/Assembly-CSharp.dll /tmp/work
-aws s3 cp s3://stationeering-gamedata/stationeering-gamedata/beta/rocketstation_Data/StreamingAssets/version.ini /tmp/work
+aws s3 cp s3://stationeering-gamedata/beta/rocketstation_Data/StreamingAssets/version.ini /tmp/work
 
 log "Clone src..."
 git clone https://$DECOMPILER_USERNAME:$DECOMPILER_PASSWORD@git.ilus.io/Stationeering/Assembly-CSharp.git /tmp/work/git
 
+log "Decompiling..."
 /root/.dotnet/tools/ilspycmd /tmp/work/Assembly-CSharp.dll -p -o /tmp/work/git/src
 
 cd /tmp/work/git
 
+log "Pushing back into git..."
 VERSION=`cat /tmp/work/version.ini | grep UPDATEVERSION | awk -F\  '{ printf $2 }' | sed -r 's/\r//g'`
 git add .
 git commit -am "$VERSION"
