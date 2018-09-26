@@ -1,0 +1,14 @@
+{
+  "name": "ecsinvoker",
+  "version": "1.0.0",
+  "description": "Lambda to invoke ECS task.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "aws-sdk": "^2.274.1"
+  }
+}

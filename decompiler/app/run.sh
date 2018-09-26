@@ -25,8 +25,9 @@ log "Loaded credentials for git user '$DECOMPILER_USERNAME'."
 
 mkdir -p /tmp/work/git
 
-log "Downloading Assembly-CSharp.dll and version.ini..."
+log "Downloading Assembly-CSharp.dll..."
 aws s3 cp s3://stationeering-gamedata/beta/rocketstation_Data/Managed/Assembly-CSharp.dll /tmp/work
+log "Downloading version.ini..."
 aws s3 cp s3://stationeering-gamedata/beta/rocketstation_Data/StreamingAssets/version.ini /tmp/work
 
 log "Clone src..."
@@ -36,6 +37,9 @@ log "Decompiling..."
 /root/.dotnet/tools/ilspycmd /tmp/work/Assembly-CSharp.dll -p -o /tmp/work/git/src
 
 cd /tmp/work/git
+
+git config --global user.name "Stationeering Decompiler"
+git config --global user.email "decompiler@stationeering.com"
 
 log "Pushing back into git..."
 VERSION=`cat /tmp/work/version.ini | grep UPDATEVERSION | awk -F\  '{ printf $2 }' | sed -r 's/\r//g'`

@@ -100,7 +100,8 @@ exports.publishRecent = async function publishRecentVersions() {
         FilterExpression: "attribute_exists(#P)",
         ScanIndexForward: false,
         Limit: publicCount + betaItems.length,
-        TableName: "Versions"
+        TableName: "Versions",
+        ConsistentRead: true
     };
 
     try {

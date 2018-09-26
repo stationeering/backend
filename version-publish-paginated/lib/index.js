@@ -74,7 +74,8 @@ async function fetchUnpaginatedVersions(includeBeta) {
       FilterExpression: "attribute_not_exists(#PG)",
       KeyConditionExpression: "#G = :game",
       ScanIndexForward: true,
-      TableName: "Versions"
+      TableName: "Versions",
+      ConsistentRead: true
   };
 
   if (!includeBeta) {

@@ -37,7 +37,8 @@ async function fetchVersions(beta) {
       KeyConditionExpression: "#G = :game",
       ScanIndexForward: false,
       Limit: 30,
-      TableName: "Versions"
+      TableName: "Versions",
+      ConsistentRead: true
   };
 
   if (!beta) {
