@@ -1,7 +1,7 @@
 var AWS = require('aws-sdk');
 var DynamoDB = new AWS.DynamoDB();
 var FlakeId = require('flake-idgen');
-var Base58 = require('base58');
+var Base58 = require('bs58');
 var intformat = require('biguint-format');
 
 var flakeGenerator;
@@ -12,16 +12,18 @@ exports.handler = async function (event, context, callback) {
     flakeGenerator = new FlakeId({ id: id, epoch: 1535760000000 });
   }
 
-  var linkId = intformat(flakeGenerator.next(), 'dec');
+  var newId = flakeGenerator.next();
+  
+  var linkId = intformat(newId, 'dec');
   var createdAt = Date.now().toString(); 
   var state = event.body.state;
   
-  var link = Base58.encode(linkId);
+  var link = "_" + Base58.encode(newId);
 
   var params = {
     Item: {
         "link": {
-            N: linkId.toString()
+            N: linkId
         },
         "created_at": {
             N: createdAt

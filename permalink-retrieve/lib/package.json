@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "base58": "^1.0.1"
+    "base58": "^1.0.1",
+    "biguint-format": "^1.0.0",
+    "bs58": "^4.0.1"
   }
 }

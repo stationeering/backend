@@ -1,14 +1,25 @@
 var AWS = require('aws-sdk');
 var DynamoDB = new AWS.DynamoDB();
-var Base58 = require('base58');
+var intformat = require('biguint-format');
+var LegacyBase58 = require('base58');
+var Base58 = require('bs58');
 
 exports.handler = async function (event, context, callback) {
-  var linkId = Base58.decode(event.parameters.link);
+  var rawLink = event.parameters.link;
+  var linkId;
+
+  if (rawLink.charAt(0) === "_") {
+    var trimmedLink = rawLink.substring(1);
+    var decodedLink = Base58.decode(trimmedLink);
+    linkId = intformat(decodedLink, "dec");
+  } else {
+    linkId = LegacyBase58.decode(rawLink).toString();
+  }
 
   var params = {
     Key: {
         "link": {
-            N: linkId.toString()
+            N: linkId
         }
     },
     TableName: "Permalinks"
