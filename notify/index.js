@@ -1,5 +1,6 @@
 var AWS = require('aws-sdk');
 var SSM = new AWS.SSM();
+var lambda = new AWS.Lambda();
 
 function log(content) {
   console.log("Stationeering: " + content);
@@ -31,7 +32,23 @@ exports.handler = async function (event, context, callback) {
     return;
   }
   
-  console.log("Notification validated from '" + user + "'.");
+  console.log("Notification validated from '" + user + "'. Attempting to invoke Fetcher lambda.");
 
-  callback(null, { "body": "OK" });
+  try {
+    var params = { 
+      FunctionName: process.env.FetcherInvokerARN,
+      InvocationType: "Event",
+      Payload: "{ \"interval\": 300000 }"
+    };
+    
+    var lambdaResult = await lambda.invoke(params).promise();
+    
+    log("Invocation success! " + JSON.stringify(lambdaResult));
+    
+    callback(null, { "body": "OK" });
+  } catch (err) {
+      log("Failed to invoke fetcher lambda.");
+      log(err);
+      callback(new Error("Failure"));
+  }
 };
