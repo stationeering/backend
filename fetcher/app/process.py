@@ -4,10 +4,11 @@ import sys
 fileName = sys.argv[1]
 branch = sys.argv[2]
 field = sys.argv[3]
+steamid = sys.argv[4]
 
 with open(fileName, 'r') as f:
         rawFile = f.read()
-        d = "\"544550\""
+        d = "\"" + steamid + "\""
         removedTrashBeginning = [d+e for e in rawFile.split(d, 1) if e]
         
         revTrash = removedTrashBeginning[1][::-1]
@@ -19,4 +20,4 @@ with open(fileName, 'r') as f:
 
         data = vdf.loads(cleanedFile)
 
-        print(data["544550"]["depots"]["branches"][branch][field])
+        print(data[steamid]["depots"]["branches"][branch][field])
