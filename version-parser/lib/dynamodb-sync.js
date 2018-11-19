@@ -289,6 +289,41 @@ async function updateBranchStateOnVersion(version, branch, date) {
     }
 }
 
+exports.updateServerBuildId = async function updateServerBuildId(version, buildId) {
+    log("Update build id to be '" + buildId + "' for version " + version + "...");
+
+    var params = {
+        Key: {
+            "game": {
+                S: "stationeers"
+            },
+            "version": {
+                N: exports.versionAsNumber(version)
+            }
+        },
+        ExpressionAttributeNames: {
+            "#B": "server_build_id"
+        },
+        ExpressionAttributeValues: {
+            ":b": { N: buildId.toString() }
+        },
+        UpdateExpression: "SET #B = :b",
+        ConditionExpression: "attribute_not_exists(#B)",
+        ReturnValues: "NONE",
+        TableName: "Versions"
+    };
+
+    var dynamoResponse;
+
+    try {
+        dynamoResponse = await DynamoDB.updateItem(params).promise();
+        log("Updated DynamoDB record.");
+    } catch (err) {
+        log("DynamoDB Failed! " + err);
+        return false;
+    }
+}
+
 exports.versionAsNumber = function versionAsNumber(version) {
     return Number.parseInt(version.split(".").map((part) => part.padStart(5, "0")).join("")).toString();
 }

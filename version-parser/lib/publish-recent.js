@@ -136,6 +136,10 @@ function dynamoDBToPlainObject(item) {
         output["build_id"] = item.build_id.N;
     }
 
+    if (item.hasOwnProperty("server_build_id")) {
+        output["server_build_id"] = item.server_build_id.N;
+    }
+
     if (item.hasOwnProperty("built_date")) {
         output["built_date"] = item.built_date.N;
     }
@@ -146,6 +150,14 @@ function dynamoDBToPlainObject(item) {
 
     if (item.hasOwnProperty("public_date")) {
         output["public_date"] = item.public_date.N;
+    }
+
+    if (item.hasOwnProperty("server_beta_date")) {
+        output["server_beta_date"] = item.server_beta_date.N;
+    }
+
+    if (item.hasOwnProperty("server_public_date")) {
+        output["server_public_date"] = item.server_public_date.N;
     }
 
     if (item.hasOwnProperty("updated_date")) {
