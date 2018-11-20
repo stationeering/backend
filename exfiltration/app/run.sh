@@ -40,6 +40,6 @@ mkdir exfiltrated
 cd exfiltrated
 cp /tmp/*.xml .
 
-aws s3 sync exfiltrated/. s3://stationeering-exfiltration-data/
+aws s3 sync . s3://stationeering-exfiltration-data/
 
 log "All done!"

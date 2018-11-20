@@ -7,7 +7,7 @@ RUN apt-get update && \
     apt-get install -y apt-transport-https && \
     echo "deb https://download.mono-project.com/repo/ubuntu stable-xenial main" | tee /etc/apt/sources.list.d/mono-official-stable.list && \
     apt update && \
-    apt-get install -y mono-devel
+    apt-get install -y mono-runtime libmono-system-core4.0-cil
 
 # Install awscli.
 RUN apt-get install -y python3 python3-setuptools && \
