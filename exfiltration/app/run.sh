@@ -21,17 +21,25 @@ log "Downloading beta dedicated server..."
 /opt/steamcmd/steamcmd.sh "+login anonymous" "+force_install_dir $dir" "+app_update 600760 -beta beta validate" "+quit"
 
 log "Downloading agent..."
-cd $dir/rocketstation_DedicatedServer_Data/Managed/
-aws s3 sync s3://stationeering-agent/ .
+cd /tmp/
+aws s3 sync s3://stationeering-exfiltration-agent/ .
+cp /tmp/Agent.dll $dir/rocketstation_DedicatedServer_Data/Managed/
 
 log "Injecting agent..."
-mv Assembly-CSharp.dll Assembly-CSharp.dll.orig
+cd $dir/rocketstation_DedicatedServer_Data/Managed/
+mv Assembly-CSharp.dll Assembly-CSharp.dll-original
+mono /tmp/AgentInjector.exe Agent.dll Assembly-CSharp.dll-original Assembly-CSharp.dll Assets.Scripts.GameManager set_GameState
 
-
-
-
+log "Running server with agent..."
 cd $dir
-./rocketstation_DedicatedServer.x86_64  -autostart -nographics -batchmode
+./rocketstation_DedicatedServer.x86_64 -autostart -nographics -batchmode
 
+log "Done, copying exfiltrated files to S3..."
+
+mkdir exfiltrated
+cd exfiltrated
+cp /tmp/*.xml .
+
+aws s3 sync exfiltrated/. s3://stationeering-exfiltration-data/
 
 log "All done!"
