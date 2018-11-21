@@ -11,14 +11,20 @@ abort() {
   fi
 }
 
-log "Starting exfiltration process..."
+log "Starting exfiltration process for branch $BRANCH..."
 
 dir="/opt/server"
 
 mkdir $dir
 
-log "Downloading beta dedicated server..."
-/opt/steamcmd/steamcmd.sh "+login anonymous" "+force_install_dir $dir" "+app_update 600760 -beta beta validate" "+quit"
+log "Downloading dedicated server..."
+
+if [ "$BRANCH" == "beta" ]; then
+  /opt/steamcmd/steamcmd.sh "+login anonymous" "+force_install_dir $dir" "+app_update 600760 -beta beta validate" "+quit"
+else
+  BRANCH="public"
+  /opt/steamcmd/steamcmd.sh "+login anonymous" "+force_install_dir $dir" "+app_update 600760 validate" "+quit"
+fi
 
 log "Downloading agent..."
 cd /tmp/
@@ -40,6 +46,6 @@ mkdir exfiltrated
 cd exfiltrated
 cp /tmp/*.xml .
 
-aws s3 sync . s3://stationeering-exfiltration-data/
+aws s3 sync . s3://stationeering-exfiltration-data/$BRANCH/
 
 log "All done!"
