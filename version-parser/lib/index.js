@@ -64,6 +64,7 @@ async function processServerVersion(branch, body) {
 
     if (updateChanges) {
         await publishAll();
+        await invokeExfiltration(branch);
     }
 }
 
@@ -97,6 +98,15 @@ async function invokeNextFunctions() {
     try {
         log("Invoking Version Publish Pagination...")
         await lambda.invoke({ FunctionName: "backend-version-publish-p-VersionPublishPaginatedL-JAW55VEV2MA5", InvocationType: "Event", Payload: {} }).promise();
+    } catch (err) {
+        log("Failed to invoke Lambda: " + err);
+    }
+}
+
+async function invokeExfiltration(branch) {
+    try {
+        log("Invoking Exfiltration...")
+        await lambda.invoke({ FunctionName: "backend-exfiltration-ExfiltrationInvokerLambda-1HNBZKIAY55HR", InvocationType: "Event", Payload: { branch: branch } }).promise();
     } catch (err) {
         log("Failed to invoke Lambda: " + err);
     }
