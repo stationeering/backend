@@ -54,6 +54,8 @@ function parseThings(thingsJSON) {
 function parseThing(thing) {
     let thingOut = {};
 
+    thingOut['prefabHash'] = thing['$']['prefabHash'];
+
     thingOut['temperatures'] = {    
         shatter: thing['TemperatureLimits'][0]['$']['shatter'],
         flashpoint: thing['TemperatureLimits'][0]['$']['flashpoint'],
@@ -129,6 +131,9 @@ function parseThing(thing) {
 
     flags['entity'] = thingOut['objectHeirachy'].includes('Assets.Scripts.Objects.Entity');
     flags['npc'] = thingOut['objectHeirachy'].includes('Assets.Scripts.Objects.Entities.Npc');
+
+    flags['atmospherics'] = thingOut['objectHeirachy'].includes('Assets.Scripts.Objects.Pipes.DeviceAtmospherics') ||
+                            thingOut['objectHeirachy'].includes('Assets.Scripts.Objects.Pipes.Pipe');
 
     thingOut['flags'] = flags;
 
