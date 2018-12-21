@@ -71,7 +71,7 @@ function processLogicSlotType(data) {
 
 function processScriptCommand(data) {
     return data.Instructions.Instruction.reduce((acc, val) => {
-        acc[val["$"]["instruction"]] = val["_"];
+        acc[val["$"]["instruction"]] = { description: val["_"], example: val["$"]["example"] };
         return acc;
     }, {});
 }
