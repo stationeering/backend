@@ -68,16 +68,16 @@ do_branch() {
   
   log "Downloading $branch from steam..."
   if [ $server = "true" ]; then
-    mono /opt/depotdownloader/DepotDownloader.exe -app $appid -beta $branch -filelist $filelist -dir $download_dir
+    dotnet /opt/depotdownloader/DepotDownloader.dll -app $appid -beta $branch -filelist $filelist -dir $download_dir
   else
-    mono /opt/depotdownloader/DepotDownloader.exe -app $appid -beta $branch -username $STEAM_USERNAME -password $STEAM_PASSWORD -all-platforms -filelist $filelist -dir $download_dir
+    dotnet /opt/depotdownloader/DepotDownloader.dll -app $appid -beta $branch -username $STEAM_USERNAME -password $STEAM_PASSWORD -all-platforms -filelist $filelist -dir $download_dir
   fi
 
   log "Downloading manifest to allow removal of files..."
   if [ $server = "true" ]; then
-    mono /opt/depotdownloader/DepotDownloader.exe -app $appid -beta $branch -filelist $filelist -dir $download_dir -manifest-only
+    dotnet /opt/depotdownloader/DepotDownloader.dll -app $appid -beta $branch -filelist $filelist -dir $download_dir -manifest-only
   else
-    mono /opt/depotdownloader/DepotDownloader.exe -app $appid -beta $branch -username $STEAM_USERNAME -password $STEAM_PASSWORD -all-platforms -filelist $filelist -dir $download_dir -manifest-only
+    dotnet /opt/depotdownloader/DepotDownloader.dll -app $appid -beta $branch -username $STEAM_USERNAME -password $STEAM_PASSWORD -all-platforms -filelist $filelist -dir $download_dir -manifest-only
   fi
   manifest_file=$download_dir/manifest_*.txt
 
