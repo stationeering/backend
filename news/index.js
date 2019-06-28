@@ -1,13 +1,15 @@
 var AWS = require('aws-sdk');
+
 var axios = require('axios');
 var sharp = require('sharp');
+var Parser = require('rss-parser');
 
 var S3 = new AWS.S3();
 
 exports.handler = async function (event, context) {
   console.log("Stationeering: News Fetcher...");
 
-  await Promise.all([ updateSteam() ])
+  await Promise.all([ updateSteam(), updateReddit() ])
     .then(function (response) {
       context.succeed("Stationeering: Finished updating news.");
     })
@@ -33,6 +35,40 @@ async function updateSteam() {
   await handleNewsStream("steam", posts);
 }
 
+async function updateReddit() {
+  console.log("Stationeering: Fetching reddit new...");
+
+  let response = await axios({ url: 'https://www.reddit.com/r/stationeers/new/.rss?sort=new', method: 'get' });
+
+  if (response.status !== 200) {
+    throw "Non 200 response from reddit RSS! (" + response.status + ")";
+  }
+
+  console.log("Stationeering: Got reddit RSS, parsing feed...");
+
+  let parser = new Parser();
+  let feed = await parser.parseString(response.data);
+
+  console.log("Stationeering: Parsed feed, cleaning...")
+
+  let posts = feed.items.map((item) => cleanRedditPost(item));
+
+  await handleNewsStream("reddit", posts);
+}
+
+function cleanRedditPost(post) {
+  return {
+    id: post.id,
+    date: Date.parse(post.isoDate) / 1000,
+    title: post.title,
+    author: post.author,
+    url: post.link,
+    contents: post.contentSnippet.split("submitted by")[0],
+    has_image: false,
+    tags: [ "reddit" ]
+  };
+}
+
 function cleanSteamNews(newsEntry) {
   let contents = newsEntry.contents;
   let imageURL = undefined;
@@ -47,6 +83,7 @@ function cleanSteamNews(newsEntry) {
     date: newsEntry.date,
     title: newsEntry.title,
     author: newsEntry.author,
+    url: newsEntry.url,
     contents: contents,
     has_image: (imageURL !== undefined),
     original_image: imageURL,
