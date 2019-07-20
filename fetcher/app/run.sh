@@ -25,9 +25,13 @@ log "Loaded credentials for steam user '$STEAM_USERNAME'."
 
 log "Find steam depot info for Stationeers..."
 /opt/steamcmd/steamcmd.sh "+login $STEAM_USERNAME $STEAM_PASSWORD" "+app_info_print 544550" "+quit" > /tmp/stationeers.vdf
+log "VDF for Client:"
+cat /tmp/stationeers.vdf
 
 log "Find steam depot info for Stationeers Dedicated Server..."
 /opt/steamcmd/steamcmd.sh "+login anonymous" "+app_info_print 600760" "+quit" > /tmp/stationeers_server.vdf
+log "VDF for Server:"
+cat /tmp/stationeers_server.vdf
 
 do_branch() {
   branch=$1
