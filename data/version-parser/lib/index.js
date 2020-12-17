@@ -106,7 +106,7 @@ async function invokeNextFunctions() {
 async function invokeExfiltration(branch) {
     try {
         log("Invoking Exfiltration...")
-        await lambda.invoke({ FunctionName: "backend-exfiltration-ExfiltrationInvokerLambda-1HNBZKIAY55HR", InvocationType: "Event", Payload: JSON.stringify({ branch: branch }) }).promise();
+        await lambda.invoke({ FunctionName: "backend-exfiltration-ExfiltrationInvokerLambda-I0CX5RYRFKXW", InvocationType: "Event", Payload: JSON.stringify({ branch: branch }) }).promise();
     } catch (err) {
         log("Failed to invoke Lambda: " + err);
     }
