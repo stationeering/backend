@@ -27,25 +27,21 @@ else
 fi
 
 log "Downloading agent..."
-cd /tmp/
-aws s3 sync s3://stationeering-exfiltration-agent/ .
-cp /tmp/Agent.dll $dir/rocketstation_DedicatedServer_Data/Managed/
+aws s3 sync s3://stationeering-exfiltration-agent/ $dir
 
-log "Injecting agent..."
-cd $dir/rocketstation_DedicatedServer_Data/Managed/
-mv Assembly-CSharp.dll Assembly-CSharp.dll-original
-mono /tmp/AgentInjector.exe Agent.dll Assembly-CSharp.dll-original Assembly-CSharp.dll Assets.Scripts.GameManager set_GameState
-
-log "Running server with agent..."
+log "Running server with stationeers-webapi..."
 cd $dir
-./rocketstation_DedicatedServer.x86_64 -autostart -nographics -batchmode
+chmod a+x run_bepinex.sh
+./run_bepinex.sh | tee serverlog &
 
-log "Done, copying exfiltrated files to S3..."
+SERVER_PID=$!
+log "Server pid is: $SERVER_PID"
 
-mkdir exfiltrated
-cd exfiltrated
-cp /tmp/*.xml .
+log "Running exfiltation agent..."
+chmod a+x agent
+AGENT_ENDPOINT=http://localhost:4444 AGENT_BRANCH=$BRANCH AGENT_BUCKET=stationeering-exfiltration-data AGENT_TIMEOUT=10m ./agent
 
-aws s3 sync . s3://stationeering-exfiltration-data/$BRANCH/
+log "Killing server!"
+kill -9 $SERVER_PID
 
 log "All done!"
