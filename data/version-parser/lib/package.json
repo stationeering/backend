@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "feed": "^2.0.1",
+    "feed": "^4.2.2",
     "htmlencode": "0.0.4"
   }
 }
